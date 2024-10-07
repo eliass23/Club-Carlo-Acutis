@@ -1,0 +1,96 @@
+<h3 style="text-align:center; color:#2c3e50;">CO₂ Emissions Calculator</h3>
+
+<form id="co2Calculator" style="background-color:#ecf0f1; padding:20px; border-radius:10px; width:300px; margin:auto;">
+  <label for="electricity" style="color:#2c3e50;">How many kWh of electricity do you use per month?</label><br>
+  <input type="number" id="electricity" name="electricity" style="width:100%; padding:5px; margin-bottom:15px;"><br>
+
+  <label for="km" style="color:#2c3e50;">How many kilometers do you drive per month?</label><br>
+  <input type="number" id="km" name="km" style="width:100%; padding:5px; margin-bottom:15px;"><br>
+
+  <label for="waste" style="color:#2c3e50;">How many kilograms of waste do you produce per month?</label><br>
+  <input type="number" id="waste" name="waste" style="width:100%; padding:5px; margin-bottom:15px;"><br>
+
+  <input type="button" value="Calculate Emissions" onclick="calculateCO2()" style="background-color:#27ae60; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer;">
+</form>
+
+<p id="result" style="text-align:center; color:#e74c3c; font-size:18px; margin-top:20px;"></p>
+
+<!-- Div for the chart -->
+<canvas id="co2Chart" style="max-width:600px; margin: 20px auto; display:none;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+function calculateCO2() {
+  var electricity = document.getElementById("electricity").value || 0;
+  var km = document.getElementById("km").value || 0;
+  var waste = document.getElementById("waste").value || 0;
+
+  // CO₂ emission factors
+  var co2FromElectricity = electricity * 0.92; // 0.92 kg of CO₂ per kWh
+  var co2FromTransport = (km / 10) * 2.31; // 2.31 kg of CO₂ per liter, with 10 km/liter fuel efficiency
+  var co2FromWaste = waste * 1.3; // 1.3 kg of CO₂ per kg of waste
+
+  // Calculate total emissions
+  var totalCO2 = co2FromElectricity + co2FromTransport + co2FromWaste;
+
+  // Show result
+  document.getElementById("result").innerHTML = 
+    "Your CO₂ emissions are " + totalCO2.toFixed(2) + " kg per year.";
+
+  // Display chart
+  var ctx = document.getElementById("co2Chart").getContext('2d');
+  document.getElementById("co2Chart").style.display = "block";
+
+  // Chart configuration
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Electricity', 'Transport', 'Waste'],
+      datasets: [{
+        label: 'CO₂ Emissions (kg)',
+        data: [co2FromElectricity, co2FromTransport, co2FromWaste],
+        backgroundColor: ['#3498db', '#e67e22', '#2ecc71'],
+        borderColor: ['#2980b9', '#d35400', '#27ae60'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            precision: 0
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutBounce'
+      },
+      plugins: {
+        tooltip: {
+          enabled: true
+        },
+        legend: {
+          onClick: (e, legendItem) => {
+            var index = legendItem.datasetIndex;
+            var ci = legendItem.chart;
+            var meta = ci.getDatasetMeta(index);
+            meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+            ci.update();
+          }
+        },
+        datalabels: {
+          display: true,
+          color: 'black',
+          align: 'end',
+          anchor: 'end',
+          formatter: function(value) {
+            return value.toFixed(2) + ' kg';
+          }
+        }
+      }
+    }
+  });
+}
+</script>
